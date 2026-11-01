@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { cartCount, useCartStore } from "@/stores/cartStore";
 
 const links = [
@@ -69,9 +69,6 @@ export function Header() {
             </Link>
 
             <div className="flex w-1/4 items-center justify-end gap-2 md:gap-5">
-              <button className="hidden p-2 md:block" aria-label="Search">
-                <Search className="h-5 w-5 text-text" strokeWidth={1.5} />
-              </button>
               <Link to="/cart" className="relative p-2" aria-label="Cart">
                 <ShoppingBag className="h-5 w-5 text-text" strokeWidth={1.5} />
                 {count > 0 && (

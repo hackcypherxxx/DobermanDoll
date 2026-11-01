@@ -13,7 +13,7 @@ export default function ReviewsPage() {
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", rating: 5, comment: "", productId: "" });
 
-  const { data: reviews, isLoading } = useQuery({
+  const { data: reviews, isLoading, isError } = useQuery({
     queryKey: ["reviews"],
     queryFn: listReviews,
   });
@@ -45,10 +45,11 @@ export default function ReviewsPage() {
     });
   }
 
-  const approvedReviews = reviews ? reviews.filter(r => r.isApproved) : [];
+  // Show all reviews returned by the API (it should already be filtering for approved ones)
+  const displayReviews = reviews || [];
 
-  const averageRating = approvedReviews.length > 0
-    ? (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / approvedReviews.length).toFixed(1)
+  const averageRating = displayReviews.length > 0
+    ? (displayReviews.reduce((acc, r) => acc + r.rating, 0) / displayReviews.length).toFixed(1)
     : "0.0";
 
   return (
@@ -64,7 +65,7 @@ export default function ReviewsPage() {
               ))}
             </div>
             <p className="text-sm text-text-secondary">
-              <strong className="text-text">{averageRating} out of 5</strong> based on {approvedReviews.length} reviews
+              <strong className="text-text">{averageRating} out of 5</strong> based on {displayReviews.length} reviews
             </p>
           </div>
           <button
@@ -79,9 +80,15 @@ export default function ReviewsPage() {
       <div className="page-container mt-16">
         {isLoading ? (
           <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-rose-dark border-t-transparent" /></div>
-        ) : approvedReviews.length > 0 ? (
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center border border-red-200 bg-red-50 p-12 text-center">
+             <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
+             <h3 className="font-display text-2xl text-red-700">Could not load reviews</h3>
+             <p className="text-sm text-red-600 mt-2">There was a problem connecting to the server.</p>
+          </div>
+        ) : displayReviews.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {approvedReviews.map((review) => (
+            {displayReviews.map((review) => (
               <div key={review._id} className="flex flex-col border border-border bg-surface p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1 text-rose">
@@ -143,14 +150,7 @@ export default function ReviewsPage() {
               <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">Your Review</label>
               <textarea required rows={4} value={formData.comment} onChange={(e) => setFormData({ ...formData, comment: e.target.value })} placeholder="Tell us about your little treasure..." className="border border-border p-3 text-sm focus:border-rose-dark focus:outline-none" />
             </div>
-            
-            {mutation.isError && (
-              <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 p-3 border border-red-200">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <p>{(mutation.error as any)?.message || "Failed to submit review."}</p>
-              </div>
-            )}
-
+            {mutation.isError && <p className="text-xs text-red-600">Failed to submit review. Please try again.</p>}
             <button type="submit" disabled={mutation.isPending} className="w-full bg-rose-dark py-3 text-[11px] font-bold uppercase tracking-wider text-white disabled:opacity-50 mt-2">
               {mutation.isPending ? "Submitting..." : "Submit Review"}
             </button>

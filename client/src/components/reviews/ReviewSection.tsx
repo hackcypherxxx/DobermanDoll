@@ -41,14 +41,14 @@ export function ReviewSection() {
       customerEmail: formData.email,
       rating: formData.rating,
       comment: formData.comment,
-      isApproved: false, // CRITICAL FIX: Forces the backend to accept the payload
+      isApproved: false, 
     });
   }
 
   if (isLoading) return null;
 
-  const approvedReviews = reviews ? reviews.filter(r => r.isApproved) : [];
-  const displayReviews = approvedReviews.slice(0, 3);
+  // Show all reviews returned by the API
+  const displayReviews = (reviews || []).slice(0, 3);
 
   return (
     <section className="bg-cream py-20 md:py-28">
@@ -135,7 +135,6 @@ export function ReviewSection() {
               <textarea required rows={4} value={formData.comment} onChange={(e) => setFormData({ ...formData, comment: e.target.value })} placeholder="Tell us about your little treasure..." className="border border-border p-3 text-sm focus:border-rose-dark focus:outline-none" />
             </div>
             
-            {/* Error Display */}
             {mutation.isError && (
               <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 p-3 border border-red-200">
                 <AlertCircle className="h-4 w-4 shrink-0" />
