@@ -5,9 +5,9 @@ import { ApiError } from "../utils/ApiError.js";
 
 type ErrorLike = {
   name?: string; 
-  code?: number; 
+  code?: number;  
   message?: string;
-};
+}; 
 
 /** 
  * Central error handler. Runs after all routes and normalizes every thrown

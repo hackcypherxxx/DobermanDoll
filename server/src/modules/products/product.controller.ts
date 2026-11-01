@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { productService } from "./product.service.js";
 import { geminiService } from "../../services/gemini.service.js";
+import { cloudinaryService } from "../../services/cloudinary.service.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 export const getPublicProducts = asyncHandler(async (req: Request, res: Response) => {
   const data = await productService.getAllPublic(req.query);
@@ -16,6 +18,11 @@ export const getProductBySlug = asyncHandler(async (req: Request, res: Response)
 export const getAdminProducts = asyncHandler(async (_req: Request, res: Response) => {
   const data = await productService.getAllAdmin();
   res.status(200).json({ success: true, message: "Products retrieved", data });
+});
+
+export const getAdminProductById = asyncHandler(async (req: Request, res: Response) => {
+  const data = await productService.getByIdAdmin(req.params.id as string);
+  res.status(200).json({ success: true, message: "Product retrieved", data });
 });
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
@@ -33,14 +40,23 @@ export const deleteProduct = asyncHandler(async (req: Request, res: Response) =>
   res.status(200).json({ success: true, message: "Product deleted", data: {} });
 });
 
-// AI Description Generator
 export const generateDescription = asyncHandler(async (req: Request, res: Response) => {
   const { name, shortDescription, imageUrl } = req.body;
   const htmlDescription = await geminiService.generateProductDescription(name, shortDescription, imageUrl);
-  
-  res.status(200).json({ 
-    success: true, 
-    message: "Description generated successfully", 
-    data: { description: htmlDescription } 
+  res.status(200).json({ success: true, message: "Description generated successfully", data: { description: htmlDescription } });
+});
+
+// THIS IS THE UPLOAD CONTROLLER
+export const uploadProductImage = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    throw new ApiError(400, "No image file provided");
+  }
+
+  const { url, publicId } = await cloudinaryService.uploadImage(req.file.buffer);
+
+  res.status(200).json({
+    success: true,
+    message: "Image uploaded successfully",
+    data: { url, publicId }, // Returns the public URL and the ID to save
   });
 });

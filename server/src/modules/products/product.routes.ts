@@ -3,6 +3,7 @@ import * as productController from "./product.controller.js";
 import { validateRequest } from "../../middleware/validateRequest.js";
 import { createProductSchema, updateProductSchema, generateDescriptionSchema } from "./product.schema.js";
 import { authenticateAdmin } from "../../middleware/authenticateAdmin.js";
+import { upload } from "../../middleware/upload.js";
 import { z } from "zod";
 
 const mongoIdSchema = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ID format") });
@@ -18,8 +19,12 @@ export const productAdminRoutes = Router();
 productAdminRoutes.use(authenticateAdmin);
 productAdminRoutes.get("/", productController.getAdminProducts);
 
-// AI Generator Route
+// IMPORTANT: upload-image MUST come before /:id to avoid route collision
+productAdminRoutes.post("/upload-image", upload.single("image"), productController.uploadProductImage);
 productAdminRoutes.post("/generate-description", validateRequest({ body: generateDescriptionSchema }), productController.generateDescription);
+
+// Get single product by ID (for edit page)
+productAdminRoutes.get("/:id", validateRequest({ params: mongoIdSchema }), productController.getAdminProductById);
 
 productAdminRoutes.post("/", validateRequest({ body: createProductSchema }), productController.createProduct);
 productAdminRoutes.patch("/:id", validateRequest({ params: mongoIdSchema, body: updateProductSchema }), productController.updateProduct);

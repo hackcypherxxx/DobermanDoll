@@ -6,13 +6,10 @@ import { ApiError } from "../../utils/ApiError.js";
 export const productService = {
   async create(data: CreateProductInput) {
     const slug = slugify(data.name, { lower: true, strict: true });
-    
     const existingSlug = await Product.findOne({ slug });
     if (existingSlug) throw new ApiError(409, "Product with this name already exists");
-
     const existingSku = await Product.findOne({ sku: data.sku });
     if (existingSku) throw new ApiError(409, "Product with this SKU already exists");
-
     const product = new Product({ ...data, slug } as any);
     return product.save();
   },
@@ -23,12 +20,17 @@ export const productService = {
     if (query.featured) filter.isFeatured = true;
     if (query.bestSeller) filter.isBestSeller = true;
     if (query.newArrival) filter.isNewArrival = true;
-
     return Product.find(filter).populate("category", "name slug").sort({ createdAt: -1 });
   },
 
   async getAllAdmin() {
     return Product.find().populate("category", "name slug").sort({ createdAt: -1 });
+  },
+
+  async getByIdAdmin(id: string) {
+    const product = await Product.findById(id).populate("category", "name slug");
+    if (!product) throw new ApiError(404, "Product not found");
+    return product;
   },
 
   async getBySlug(slug: string) {
@@ -53,7 +55,15 @@ export const productService = {
       if (existingSku) throw new ApiError(409, "SKU already in use");
     }
 
-    Object.assign(product, data);
+    // Explicitly handle images array so Mongoose updates the subdocuments
+    if (data.images !== undefined) {
+      product.images = data.images as any;
+    }
+
+    // Assign the remaining fields individually so we don't overwrite images
+    const { images: _omitImages, ...rest } = data;
+    Object.assign(product, rest);
+
     return product.save();
   },
 
