@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminListCoupons, adminCreateCoupon, adminDeleteCoupon } from "@/api/admin";
-import { Plus, Trash2, Tag } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Modal } from "@/components/common/Modal";
 import { Input } from "@/components/common/Input";
 import { formatDate } from "@/lib/utils";
+import type { DiscountType } from "@/types/api";
 
 export default function AdminCouponsPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     code: "",
-    discountType: "PERCENTAGE",
+    discountType: "PERCENTAGE" as DiscountType,
     discountValue: 10,
     minPurchaseAmount: 0,
     maxUses: 100,
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 30 days from now
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
   });
 
   const { data: coupons, isLoading } = useQuery({
@@ -42,7 +43,9 @@ export default function AdminCouponsPage() {
     createMutation.mutate({ ...formData, isActive: true });
   }
 
-  if (isLoading) return <div className="p-8 text-center text-text-secondary animate-pulse">Loading coupons...</div>;
+  if (isLoading) {
+    return <div className="p-8 text-center text-text-secondary animate-pulse">Loading coupons...</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -76,20 +79,31 @@ export default function AdminCouponsPage() {
               <tr key={coupon._id} className="hover:bg-cream/30">
                 <td className="p-4 font-bold text-text">{coupon.code}</td>
                 <td className="p-4">
-                  {coupon.discountType === "PERCENTAGE" ? `${coupon.discountValue}%` : `$${coupon.discountValue}`}
+                  {coupon.discountType === "PERCENTAGE"
+                    ? `${coupon.discountValue}%`
+                    : `$${coupon.discountValue}`}
                 </td>
                 <td className="p-4">${coupon.minPurchaseAmount}</td>
                 <td className="p-4">{coupon.uses} / {coupon.maxUses}</td>
                 <td className="p-4">{formatDate(coupon.expiresAt)}</td>
                 <td className="p-4 text-right">
-                  <button onClick={() => { if(confirm("Delete this coupon?")) deleteMutation.mutate(coupon._id); }} className="p-2 text-text-secondary hover:text-rose transition-colors">
+                  <button
+                    onClick={() => {
+                      if (confirm("Delete this coupon?")) deleteMutation.mutate(coupon._id);
+                    }}
+                    className="p-2 text-text-secondary hover:text-rose transition-colors"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </td>
               </tr>
             ))}
             {coupons?.length === 0 && (
-              <tr><td colSpan={6} className="p-8 text-center text-text-secondary">No coupons found.</td></tr>
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-text-secondary">
+                  No coupons found.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -97,24 +111,62 @@ export default function AdminCouponsPage() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create Coupon">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="Coupon Code" required value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })} placeholder="e.g. SUMMER20" />
+          <Input
+            label="Coupon Code"
+            required
+            value={formData.code}
+            onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+            placeholder="e.g. SUMMER20"
+          />
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">Type</label>
-              <select value={formData.discountType} onChange={(e) => setFormData({ ...formData, discountType: e.target.value })} className="h-11 border border-border px-3 text-sm">
+              <select
+                value={formData.discountType}
+                onChange={(e) => setFormData({ ...formData, discountType: e.target.value as DiscountType })}
+                className="h-11 border border-border px-3 text-sm"
+              >
                 <option value="PERCENTAGE">Percentage (%)</option>
                 <option value="FIXED">Fixed Amount ($)</option>
               </select>
             </div>
-            <Input label="Value" type="number" required value={formData.discountValue} onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })} />
+            <Input
+              label="Value"
+              type="number"
+              required
+              value={formData.discountValue}
+              onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Min. Purchase ($)" type="number" required value={formData.minPurchaseAmount} onChange={(e) => setFormData({ ...formData, minPurchaseAmount: Number(e.target.value) })} />
-            <Input label="Max Uses" type="number" required value={formData.maxUses} onChange={(e) => setFormData({ ...formData, maxUses: Number(e.target.value) })} />
+            <Input
+              label="Min. Purchase ($)"
+              type="number"
+              required
+              value={formData.minPurchaseAmount}
+              onChange={(e) => setFormData({ ...formData, minPurchaseAmount: Number(e.target.value) })}
+            />
+            <Input
+              label="Max Uses"
+              type="number"
+              required
+              value={formData.maxUses}
+              onChange={(e) => setFormData({ ...formData, maxUses: Number(e.target.value) })}
+            />
           </div>
-          <Input label="Expiry Date" type="date" required value={formData.expiresAt} onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })} />
-          
-          <button type="submit" disabled={createMutation.isPending} className="w-full bg-rose-dark py-3 text-[11px] font-bold uppercase tracking-wider text-white mt-4 disabled:opacity-50">
+          <Input
+            label="Expiry Date"
+            type="date"
+            required
+            value={formData.expiresAt}
+            onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+          />
+
+          <button
+            type="submit"
+            disabled={createMutation.isPending}
+            className="w-full bg-rose-dark py-3 text-[11px] font-bold uppercase tracking-wider text-white mt-4 disabled:opacity-50"
+          >
             {createMutation.isPending ? "Creating..." : "Create Coupon"}
           </button>
         </form>

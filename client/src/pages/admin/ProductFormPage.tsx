@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Save, Sparkles, UploadCloud, Loader2, AlertTriangle, Trash2, Upload } from "lucide-react";
-import { 
-  adminGetProduct, 
-  adminCreateProduct, 
-  adminUpdateProduct, 
-  adminListCategories, 
-  adminUploadImage, 
-  adminGenerateDescription 
+import {
+  adminGetProduct,
+  adminCreateProduct,
+  adminUpdateProduct,
+  adminListCategories,
+  adminUploadImage,
+  adminGenerateDescription,
 } from "@/api/admin";
 import { productSchema, type ProductFormValues } from "@/schemas/product";
 import { Input } from "@/components/common/Input";
@@ -23,9 +23,9 @@ export default function AdminProductFormPage() {
   const isEditing = !!id;
   const queryClient = useQueryClient();
 
-  const { 
-    data: product, 
-    isLoading, 
+  const {
+    data: product,
+    isLoading,
     isError,
     error: productError,
   } = useQuery({
@@ -60,7 +60,10 @@ export default function AdminProductFormPage() {
           <AlertTriangle className="h-8 w-8 text-red-600 mx-auto mb-3" />
           <h2 className="font-display text-2xl text-red-700">Failed to load product</h2>
           <p className="text-sm text-red-600 mt-2">{productError?.message || "Unknown error"}</p>
-          <Link to="/admin/products" className="mt-6 inline-block bg-rose-dark px-6 py-2 text-[10px] font-bold uppercase text-white">
+          <Link
+            to="/admin/products"
+            className="mt-6 inline-block bg-rose-dark px-6 py-2 text-[10px] font-bold uppercase text-white"
+          >
             Back to Products
           </Link>
         </div>
@@ -126,7 +129,6 @@ function ProductForm({
     genderPresentation: product?.genderPresentation ?? "",
     includedAccessories: (product?.includedAccessories ?? []).join(", "),
     tags: (product?.tags ?? []).join(", "),
-    // FIXED: Defaults to true if it's a new product, otherwise respects the DB value
     isPublished: product ? (product.isPublished ?? true) : true,
     isFeatured: product?.isFeatured ?? false,
     isBestSeller: product?.isBestSeller ?? false,
@@ -142,7 +144,7 @@ function ProductForm({
     setValue,
     formState: { errors },
   } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as any,
     defaultValues: initialValues,
   });
 
@@ -270,6 +272,9 @@ function ProductForm({
     else createMutation.mutate(payload);
   }
 
+  // KEY FIX: Pre-bind handleSubmit with a cast so the button onClick works.
+  const onFormSubmit = handleSubmit(onSubmit as any);
+
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-0">
       <Link
@@ -285,11 +290,13 @@ function ProductForm({
             {isEditing ? "Edit Product" : "Add New Product"}
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            {isEditing ? "Update the details below." : "Upload images first, then generate the description with AI."}
+            {isEditing
+              ? "Update the details below."
+              : "Upload images first, then generate the description with AI."}
           </p>
         </div>
         <button
-          onClick={handleSubmit(onSubmit)}
+          onClick={onFormSubmit}
           disabled={createMutation.isPending || updateMutation.isPending || isUploading}
           className="flex items-center gap-2 bg-rose-dark px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-rose disabled:opacity-50 w-full sm:w-auto justify-center"
         >
@@ -310,19 +317,31 @@ function ProductForm({
           <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
             <h2 className="font-display text-xl text-text">Product Images</h2>
             <span className="text-xs text-text-secondary font-bold">
-              {uploadedImages.length} uploaded{pendingFiles.length > 0 ? ` · ${pendingFiles.length} pending` : ""}
+              {uploadedImages.length} uploaded
+              {pendingFiles.length > 0 ? ` · ${pendingFiles.length} pending` : ""}
             </span>
           </div>
 
           {uploadedImages.length > 0 && (
             <div className="mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2">Uploaded</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2">
+                Uploaded
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 {uploadedImages.map((img, idx) => (
-                  <div key={idx} className="aspect-[4/5] bg-background border border-border relative group">
-                    <img src={img.url} alt="Product" className="absolute inset-0 h-full w-full object-cover" />
+                  <div
+                    key={idx}
+                    className="aspect-[4/5] bg-background border border-border relative group"
+                  >
+                    <img
+                      src={img.url}
+                      alt="Product"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
                     {idx === 0 && (
-                      <div className="absolute top-0 left-0 bg-rose-dark text-white text-[9px] font-bold px-2 py-1">MAIN</div>
+                      <div className="absolute top-0 left-0 bg-rose-dark text-white text-[9px] font-bold px-2 py-1">
+                        MAIN
+                      </div>
                     )}
                     <button
                       type="button"
@@ -345,8 +364,15 @@ function ProductForm({
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {pendingFiles.map((pending, idx) => (
-                  <div key={idx} className="aspect-[4/5] bg-background border-2 border-dashed border-amber-300 relative group">
-                    <img src={pending.previewUrl} alt="Pending" className="absolute inset-0 h-full w-full object-cover" />
+                  <div
+                    key={idx}
+                    className="aspect-[4/5] bg-background border-2 border-dashed border-amber-300 relative group"
+                  >
+                    <img
+                      src={pending.previewUrl}
+                      alt="Pending"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
                     <button
                       type="button"
                       onClick={() => removePending(idx)}
@@ -364,9 +390,14 @@ function ProductForm({
                 className="mt-3 w-full bg-amber-600 text-white py-2.5 text-[10px] font-bold uppercase tracking-wider hover:bg-amber-700 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isUploading ? (
-                  <><Loader2 className="h-3 w-3 animate-spin" /> Uploading {pendingFiles.length}...</>
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" /> Uploading {pendingFiles.length}...
+                  </>
                 ) : (
-                  <><Upload className="h-3 w-3" /> Upload {pendingFiles.length} Image{pendingFiles.length > 1 ? "s" : ""}</>
+                  <>
+                    <Upload className="h-3 w-3" /> Upload {pendingFiles.length} Image
+                    {pendingFiles.length > 1 ? "s" : ""}
+                  </>
                 )}
               </button>
             </div>
@@ -387,7 +418,8 @@ function ProductForm({
           </div>
 
           <div className="bg-blush/50 border border-rose/20 p-3 text-[11px] text-text-secondary leading-relaxed mt-4">
-            <strong className="text-rose-dark">Tip:</strong> Select files first, review them, then click "Upload" to send them to the server. The first uploaded image (MAIN) is used by AI.
+            <strong className="text-rose-dark">Tip:</strong> Select files first, review them, then click
+            "Upload" to send them to the server. The first uploaded image (MAIN) is used by AI.
           </div>
         </div>
 
@@ -400,20 +432,30 @@ function ProductForm({
               </div>
               <Input label="SKU" {...register("sku")} error={errors.sku?.message} />
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">Category</label>
+                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">
+                  Category
+                </label>
                 <select
                   {...register("category")}
                   className="h-11 border border-border bg-background px-3 text-sm focus:border-rose-dark focus:outline-none"
                 >
                   <option value="">Select a category...</option>
                   {categories?.map((c) => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
-                {errors.category && <p className="text-xs text-red-600">{errors.category.message}</p>}
+                {errors.category && (
+                  <p className="text-xs text-red-600">{errors.category.message}</p>
+                )}
               </div>
               <div className="sm:col-span-2">
-                <Input label="Short Description" {...register("shortDescription")} error={errors.shortDescription?.message} />
+                <Input
+                  label="Short Description"
+                  {...register("shortDescription")}
+                  error={errors.shortDescription?.message}
+                />
               </div>
             </div>
           </div>
@@ -440,16 +482,31 @@ function ProductForm({
               placeholder="Click 'Generate with AI' above, or type HTML manually..."
               className="w-full border border-border p-3 text-sm font-mono focus:border-rose-dark focus:outline-none bg-background"
             />
-            {errors.description && <p className="text-xs text-red-600">{errors.description.message}</p>}
+            {errors.description && (
+              <p className="text-xs text-red-600">{errors.description.message}</p>
+            )}
           </div>
 
           <div className="border border-border bg-surface p-6 grid sm:grid-cols-2 gap-4">
-            <h2 className="font-display text-xl text-text border-b border-border pb-4 sm:col-span-2">Pricing & Inventory</h2>
-            <Input label="Price ($)" type="number" step="0.01" {...register("price")} error={errors.price?.message} />
+            <h2 className="font-display text-xl text-text border-b border-border pb-4 sm:col-span-2">
+              Pricing & Inventory
+            </h2>
+            <Input
+              label="Price ($)"
+              type="number"
+              step="0.01"
+              {...register("price")}
+              error={errors.price?.message}
+            />
             <Input label="Compare At Price ($)" type="number" step="0.01" {...register("compareAtPrice")} />
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">Inventory Type</label>
-              <select {...register("inventoryType")} className="h-11 border border-border bg-background px-3 text-sm focus:border-rose-dark focus:outline-none">
+              <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">
+                Inventory Type
+              </label>
+              <select
+                {...register("inventoryType")}
+                className="h-11 border border-border bg-background px-3 text-sm focus:border-rose-dark focus:outline-none"
+              >
                 <option value="IN_STOCK">In Stock</option>
                 <option value="MADE_TO_ORDER">Made to Order</option>
                 <option value="PRE_ORDER">Pre-Order</option>
@@ -459,20 +516,41 @@ function ProductForm({
           </div>
 
           <div className="border border-border bg-surface p-6 grid sm:grid-cols-2 gap-4">
-            <h2 className="font-display text-xl text-text border-b border-border pb-4 sm:col-span-2">Attributes</h2>
+            <h2 className="font-display text-xl text-text border-b border-border pb-4 sm:col-span-2">
+              Attributes
+            </h2>
             <Input label="Material" {...register("material")} error={errors.material?.message} />
             <Input label="Size" {...register("size")} error={errors.size?.message} />
             <Input label="Weight" {...register("weight")} error={errors.weight?.message} />
-            <Input label="Gender Presentation" {...register("genderPresentation")} error={errors.genderPresentation?.message} />
-            <div className="sm:col-span-2"><Input label="Included Accessories (comma separated)" {...register("includedAccessories")} /></div>
-            <div className="sm:col-span-2"><Input label="Tags (comma separated)" {...register("tags")} /></div>
+            <Input
+              label="Gender Presentation"
+              {...register("genderPresentation")}
+              error={errors.genderPresentation?.message}
+            />
+            <div className="sm:col-span-2">
+              <Input
+                label="Included Accessories (comma separated)"
+                {...register("includedAccessories")}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <Input label="Tags (comma separated)" {...register("tags")} />
+            </div>
           </div>
 
           <div className="border border-border bg-surface p-6 space-y-4">
-            <h2 className="font-display text-xl text-text border-b border-border pb-4">SEO Settings (Optional)</h2>
-            <Input label="SEO Title" {...register("seoTitle")} placeholder="Overrides the default product title" />
+            <h2 className="font-display text-xl text-text border-b border-border pb-4">
+              SEO Settings (Optional)
+            </h2>
+            <Input
+              label="SEO Title"
+              {...register("seoTitle")}
+              placeholder="Overrides the default product title"
+            />
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">SEO Description</label>
+              <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">
+                SEO Description
+              </label>
               <textarea
                 rows={2}
                 {...register("seoDescription")}
@@ -483,7 +561,9 @@ function ProductForm({
           </div>
 
           <div className="border border-border bg-surface p-6">
-            <h2 className="font-display text-xl text-text border-b border-border pb-4 mb-4">Visibility</h2>
+            <h2 className="font-display text-xl text-text border-b border-border pb-4 mb-4">
+              Visibility
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { name: "isPublished", label: "Published" },
@@ -507,7 +587,7 @@ function ProductForm({
 
       <div className="sm:hidden fixed bottom-0 inset-x-0 p-4 bg-surface border-t border-border z-40">
         <button
-          onClick={handleSubmit(onSubmit)}
+          onClick={onFormSubmit}
           disabled={createMutation.isPending || updateMutation.isPending || isUploading}
           className="w-full flex items-center justify-center gap-2 bg-rose-dark py-3 text-[11px] font-bold uppercase tracking-wider text-white disabled:opacity-50"
         >
