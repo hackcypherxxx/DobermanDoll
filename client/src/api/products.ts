@@ -22,6 +22,12 @@ export function listProducts(params?: ProductListParams): Promise<Product[]> {
 
 export function getProductBySlug(slug: string): Promise<Product> {
   return unwrap<Product>(
-    api.get<ApiEnvelope<Product>>(`/products/${encodeURIComponent(slug)}`)
+    api.get<ApiEnvelope<Product>>(`/products/${encodeURIComponent(slug)}`, {
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
+    })
   );
 }

@@ -10,7 +10,9 @@ interface Props {
 
 export function ProductCard({ product }: Props) {
   const addToCart = useCartStore((s) => s.add);
-  const image = product.images[0];
+  
+  // Ensure we access the object inside the array correctly
+  const primaryImage = product.images && product.images.length > 0 ? product.images[0] : null;
 
   const isSoldOut = product.inventoryType === "IN_STOCK" && product.stock <= 0;
   const hasCompareAt = typeof product.compareAtPrice === "number" && product.compareAtPrice > product.price;
@@ -21,7 +23,7 @@ export function ProductCard({ product }: Props) {
       productId: product._id,
       name: product.name,
       slug: product.slug,
-      image: image?.url,
+      image: primaryImage?.url, // Passing the URL to the cart
       sku: product.sku,
       unitPrice: product.price,
       stock: product.stock,
@@ -30,14 +32,21 @@ export function ProductCard({ product }: Props) {
   }
 
   return (
-    <div className="group flex flex-col">
+    <div className="group flex flex-col relative">
       <Link to={`/product/${product.slug}`} className="relative block overflow-hidden bg-cream">
         <div className="relative aspect-[4/5] w-full">
-          <ImageWithFallback
-            src={image?.url}
-            alt={image?.alt || product.name}
-            className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
-          />
+          {primaryImage ? (
+            <ImageWithFallback
+              src={primaryImage.url}
+              alt={primaryImage.alt || product.name}
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-500">
+              No Image
+            </div>
+          )}
+          
           {isSoldOut && (
             <span className="absolute left-3 top-3 bg-surface px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-text">
               Sold Out
@@ -47,10 +56,7 @@ export function ProductCard({ product }: Props) {
       </Link>
 
       <div className="flex flex-1 flex-col pt-4">
-        <Link
-          to={`/product/${product.slug}`}
-          className="font-display text-lg leading-tight text-text transition-colors hover:text-rose line-clamp-2"
-        >
+        <Link to={`/product/${product.slug}`} className="font-display text-lg leading-tight text-text transition-colors hover:text-rose line-clamp-2">
           {product.name}
         </Link>
 

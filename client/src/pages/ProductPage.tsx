@@ -29,7 +29,9 @@ export default function ProductPage() {
 
 function ProductDetail({ product }: { product: Product }) {
   const addToCart = useCartStore((s) => s.add);
-  const image = product.images[0];
+  
+  // Correctly access the array object
+  const primaryImage = product.images && product.images.length > 0 ? product.images[0] : null;
 
   const categoryName = typeof product.category === "object" ? product.category.name : "Shop All";
   const isSoldOut = product.inventoryType === "IN_STOCK" && product.stock <= 0;
@@ -46,8 +48,14 @@ function ProductDetail({ product }: { product: Product }) {
   function handleAdd() {
     if (isSoldOut) return;
     addToCart({
-      productId: product._id, name: product.name, slug: product.slug, image: image?.url,
-      sku: product.sku, unitPrice: product.price, stock: product.stock, inventoryType: product.inventoryType,
+      productId: product._id, 
+      name: product.name, 
+      slug: product.slug, 
+      image: primaryImage?.url, // Correctly passing string
+      sku: product.sku, 
+      unitPrice: product.price, 
+      stock: product.stock, 
+      inventoryType: product.inventoryType,
     }, qty);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 2000);
@@ -66,9 +74,9 @@ function ProductDetail({ product }: { product: Product }) {
 
         <div className="grid gap-10 lg:grid-cols-[55fr_45fr] lg:gap-16 xl:gap-24">
           
-          {/* Gallery */}
+          {/* Gallery - Passing the full object array */}
           <div className="lg:sticky lg:top-28 lg:h-fit">
-            <ProductGallery images={product.images} productName={product.name} />
+            <ProductGallery images={product.images || []} productName={product.name} />
           </div>
 
           {/* Info */}
@@ -168,7 +176,7 @@ function ProductDetail({ product }: { product: Product }) {
   );
 }
 
-// (Keep ProductReviews, Meta, Accordion, FeaturedProducts, ProductSkeleton, ProductNotFound exactly as they were in the previous step)
+// ... (Sub-components: ProductReviews, Meta, Accordion, FeaturedProducts, ProductSkeleton, ProductNotFound remain exactly the same as the previous step)
 function ProductReviews({ productId }: { productId: string }) {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);

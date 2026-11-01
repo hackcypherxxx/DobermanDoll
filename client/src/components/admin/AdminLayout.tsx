@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { AdminSidebar } from "./AdminSidebar";
 import { useAuthStore } from "@/stores/authStore";
+import { ScrollToTop } from "@/components/common/ScrollToTop";
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -10,6 +11,7 @@ export function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-cream">
+      <ScrollToTop />
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -25,16 +27,23 @@ export function AdminLayout() {
         {/* Desktop Header / Welcome */}
         <header className="hidden lg:flex h-[92px] items-center justify-between border-b border-border bg-surface px-8">
           <div>
-            <h1 className="font-display text-2xl text-text">Welcome back, {admin?.name || "Admin"}</h1>
-            <p className="text-xs text-text-secondary mt-1">Here is what's happening in your boutique today.</p>
+            <h1 className="font-display text-2xl text-text">
+              Welcome back, {admin?.name || "Admin"}
+            </h1>
+            <p className="text-xs text-text-secondary mt-1">
+              Here is what&rsquo;s happening in your boutique today.
+            </p>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blush-light text-rose-dark font-display text-lg">
             {admin?.name?.charAt(0) || "A"}
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        {/* Main Content Area — data-scroll-container resets on route change */}
+        <main
+          data-scroll-container
+          className="flex-1 overflow-y-auto p-4 md:p-8"
+        >
           <Outlet />
         </main>
       </div>
