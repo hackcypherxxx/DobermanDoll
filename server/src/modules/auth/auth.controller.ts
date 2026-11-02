@@ -5,6 +5,8 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from ".
 import { env } from "../../config/env.js";
 import { ApiError } from "../../utils/ApiError.js";
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
 const cookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
@@ -18,8 +20,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken({ id: admin._id.toString() });
 
-  res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
-  res.cookie("refreshToken", refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: SEVEN_DAYS_MS });
+  res.cookie("refreshToken", refreshToken, { ...cookieOptions, maxAge: SEVEN_DAYS_MS });
 
   res.status(200).json({
     success: true,
@@ -43,12 +45,12 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
   if (!token) throw new ApiError(401, "No refresh token provided");
 
   const decoded = verifyRefreshToken(token);
-  
+
   // In a real scenario, you'd fetch the admin from DB here to ensure they are still active
   // For now, we trust the refresh token payload to issue a new access token.
-  const payload = { id: decoded.id }; 
+  const payload = { id: decoded.id };
   const newAccessToken = generateAccessToken(payload);
 
-  res.cookie("accessToken", newAccessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+  res.cookie("accessToken", newAccessToken, { ...cookieOptions, maxAge: SEVEN_DAYS_MS });
   res.status(200).json({ success: true, message: "Token refreshed", data: {} });
 });
