@@ -8,7 +8,7 @@ import { ApiError } from "../../utils/ApiError.js";
 const cookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
-  sameSite: "strict" as const,
+  sameSite: "none" as const,
 };
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
